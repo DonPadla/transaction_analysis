@@ -1,27 +1,20 @@
-# Вспомогательные функции, необходимые для работы функции страницы «Главная», расположены в модуле utils.py
-# Вспомогательные функции, необходимые для работы функции страницы «Главная», используют библиотеку json
-# Вспомогательные функции, необходимые для работы функции страницы «Главная», используют API.
-# Вспомогательные функции, необходимые для работы функции страницы «Главная», используют библиотеку datetime
-# Вспомогательные функции, необходимые для работы функции страницы «Главная», используют библиотеку logging
-# Вспомогательные функции, необходимые для работы функции страницы «Главная», используют библиотеку pandas
+import datetime
+import json
+import logging
 import os
 
 import pandas as pd
-import logging
-from datetime import datetime
-import datetime
 import requests
 from dotenv import load_dotenv
-import json
 
 
-def get_open_file(imported_file: str, date=None):
+def get_open_file(imported_file, date=None):
     """ Принимает путь до xlsx файла, открывает его и фильтрует по дате. """
 
     logging.info('Открытие xlsx файла')
     reader = pd.read_excel(imported_file)
     reader['Дата операции'] = pd.to_datetime(reader['Дата операции'], format='%d.%m.%Y %H:%M:%S')
-    end_date = datetime.datetime.strptime(date, "%d.%m.%Y %H:%M:%S")
+    end_date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
     start_date = end_date.replace(day=1, hour=00, minute=00, second=00)
     filtered_data = reader[(reader['Дата операции'] >= start_date) & (reader['Дата операции'] <= end_date)]
     return filtered_data
@@ -98,7 +91,7 @@ def get_top_transactions_by_amount(imported_file):
     return operation_info
 
 
-def get_currency_rates(first_currency='USD', second_currency='EUR'):
+def get_currency_rates(currency_list):
     """ Выводит курс валют. """
 
     currency_info = []
@@ -106,24 +99,13 @@ def get_currency_rates(first_currency='USD', second_currency='EUR'):
     load_dotenv()
     api_key = os.getenv("API_KEY")
     headers = {"apikey": api_key}
-    payload = {}
-    url = f"https://api.apilayer.com/exchangerates_data/convert?to=RUB&from={first_currency}&amount=1"
-    response = requests.request("GET", url, headers=headers, data=payload)
-    result = json.loads(response.text)
 
-    currency_info.append({'currency': result['query']['from'],
-                          'rate': result['info']['rate']})
-
-    load_dotenv()
-    api_key = os.getenv("API_KEY")
-    headers = {"apikey": api_key}
-    payload = {}
-    url = f"https://api.apilayer.com/exchangerates_data/convert?to=RUB&from={second_currency}&amount=1"
-    response = requests.request("GET", url, headers=headers, data=payload)
-    result = json.loads(response.text)
-
-    currency_info.append({'currency': result['query']['from'],
-                          'rate': result['info']['rate']})
+    for currency in currency_list:
+        url = f"https://api.apilayer.com/exchangerates_data/convert?to=RUB&from={currency}&amount=1"
+        response = requests.request("GET", url, headers=headers)
+        result = json.loads(response.text)
+        currency_info.append({'currency': result['query']['from'],
+                              'rate': result['info']['rate']})
 
     return currency_info
 
