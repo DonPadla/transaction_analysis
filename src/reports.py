@@ -8,7 +8,7 @@ from pandas import DataFrame
 from src.logging_settings import logger
 
 
-def get_report(file_name='repo_for_spending'):
+def get_report(file_name: str = 'repo_for_spending'):
     """ Декоратор записывает результат декорируемой функции в файл"""
 
     def decorator(func):
@@ -41,9 +41,9 @@ def spending_by_category(imported_file: str, category: str, date: Optional[str] 
             stop_date = datetime.datetime.now()
         start_date = stop_date - relativedelta(months=3)
         filtered_data = reader[
-            (reader["Дата операции"] >= start_date)
-            & (reader["Дата операции"] <= stop_date)
-            & (reader["Категория"] == category)
+            (reader["Дата операции"] >= start_date) &
+            (reader["Дата операции"] <= stop_date) &
+            (reader["Категория"] == category)
             ]
         sum_category = filtered_data["Сумма операции"].sum()
 
@@ -51,5 +51,10 @@ def spending_by_category(imported_file: str, category: str, date: Optional[str] 
 
     except ValueError:
         logger.error("Переданы невалидные значения.")
+
+        return "Ошибка"
+
+    except Exception as e:
+        logger.error(f"Ошибка: {e}")
 
         return "Ошибка"
